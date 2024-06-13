@@ -1,25 +1,46 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import { useUIController } from "./context";
+import React, { useEffect, ReactElement } from "react";
+import { Routes, Route, useLocation } from "react-router-dom";
+import { CssBaseline } from "@mui/material";
+import routes from "./routes";
+import { Route as RouteType } from "./types/Route";
+import { ThemeProvider } from "@mui/material/styles";
+import darkTheme from "./theme/darkTheme";
+import defaultTheme from "./theme/defaultTheme";
 
 function App() {
+  const [controller] = useUIController();
+  const { layout, darkMode } = controller;
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    document.documentElement.scrollTop = 0;
+    if (document.scrollingElement) {
+      document.scrollingElement.scrollTop = 0;
+    }
+  }, [pathname]);
+
+  const getRoutes = (allRoutes: RouteType[]): ReactElement[] => {
+    return allRoutes.flatMap((route) => {
+      if (route.collapse) {
+        return getRoutes(route.collapse);
+      }
+
+      if (route.route) {
+        return (
+          <Route path={route.route} element={route.component} key={route.key} />
+        );
+      }
+
+      return [];
+    });
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <ThemeProvider theme={darkMode ? darkTheme : defaultTheme}>
+      <CssBaseline enableColorScheme />
+      <Routes>{getRoutes(routes)}</Routes>
+    </ThemeProvider>
   );
 }
 
